@@ -1,32 +1,27 @@
 package study.ticket.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Builder
 @Getter
-@Entity
+@Entity(name = "booking")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Booking {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private String id;
 
     @OneToOne
-    @JoinColumn(name = "member_id")
+    @JoinColumn(name = "member_id", referencedColumnName = "login_id")
     private Member member;
 
     @OneToOne
-    @JoinColumn(name = "seat_id")
+    @JoinColumn(name = "seat_id", referencedColumnName = "id")
     private Seat seat;
 
     public static Booking of(Member member, Seat seat) {

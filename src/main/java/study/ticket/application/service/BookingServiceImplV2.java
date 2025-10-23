@@ -13,19 +13,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
-@Service
+//@Service
 @RequiredArgsConstructor
 @Slf4j
-public class BookingServiceImplV1 implements BookingService {
+public class BookingServiceImplV2 implements BookingService {
 
     private final MemberService memberService;
     private final SeatService seatService;
     private final BookingRepository bookingRepository;
 
-    private final Set<Long> bookingQueue = new HashSet<>();
-//    private final Set<Long> bookingQueue = ConcurrentHashMap.newKeySet();
+    Lock lock = new ReentrantLock();
 
     @Override
     public Optional<Booking> findById(String id) {
@@ -79,13 +79,17 @@ public class BookingServiceImplV1 implements BookingService {
         bookingRepository.save(bookings);
     }
 
-    private synchronized void validateSeat(List<Long> seatIds) {
-        for (Long seatId : seatIds) {
-            if (bookingQueue.contains(seatId)) {
-                throw new IllegalStateException("이미 예약된 좌석입니다.");
-            }
+    private void validateSeat(List<Long> seatIds) {
+        lock.lock();
 
-            bookingQueue.add(seatId);
+        try {
+
+            // 비즈니스 로직
+
+        } catch (Exception e) {
+
+        } finally {
+            lock.unlock();
         }
     }
 

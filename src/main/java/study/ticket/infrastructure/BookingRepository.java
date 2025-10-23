@@ -9,6 +9,7 @@ public interface BookingRepository {
     Optional<Booking> findById(String id);
     Optional<Booking> findByMemberId(String loginId);
     List<Booking> findByIds(List<Long> ids);
+    List<Booking> findAll();
     void save(Booking booking);
     void save(List<Booking> bookings);
 }

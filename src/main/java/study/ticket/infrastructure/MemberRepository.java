@@ -1,9 +1,9 @@
-package study.ticket.application.service;
+package study.ticket.infrastructure;
 
 import study.ticket.domain.Member;
 
 import java.util.Optional;
 
-public interface MemberService {
+public interface MemberRepository {
     Optional<Member> findByLoginId(String loginId);
 }
