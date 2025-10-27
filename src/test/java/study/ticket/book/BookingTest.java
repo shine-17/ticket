@@ -1,18 +1,13 @@
 package study.ticket.book;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import study.ticket.application.service.BookingService;
-import study.ticket.application.service.SeatService;
 import study.ticket.domain.Booking;
 
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -30,11 +25,11 @@ public class BookingTest {
 
         // given
         String[] ids = {"test1", "test2", "test3", "test4", "test5"};
-        Long seatId = 1L;
+        List<Long> seatIds = List.of(1L);
 
         Thread[] threads = new Thread[THREAD_COUNT];
         for (int i = 0; i < THREAD_COUNT; i++) {
-            threads[i] = new Thread(new Task(ids[i], List.of(seatId), bookingService));
+            threads[i] = new Thread(new Task(ids[i], seatIds, bookingService));
         }
 
         // when
