@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-//@Service
+@Service
 @RequiredArgsConstructor
 @Slf4j
 public class BookingServiceImplV2 implements BookingService {
