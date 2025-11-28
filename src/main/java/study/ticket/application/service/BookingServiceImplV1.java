@@ -2,7 +2,6 @@ package study.ticket.application.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import study.ticket.domain.Booking;
 import study.ticket.domain.Member;
@@ -23,7 +22,7 @@ public class BookingServiceImplV1 implements BookingService {
     private final SeatService seatService;
     private final BookingRepository bookingRepository;
 
-    private final Set<Long> bookingQueue = new HashSet<>();
+    private final Set<Long> seatQueue = new HashSet<>();
 //    private final Set<Long> bookingQueue = ConcurrentHashMap.newKeySet();
 
     @Override
@@ -80,11 +79,11 @@ public class BookingServiceImplV1 implements BookingService {
 
     private synchronized void validateSeat(List<Long> seatIds) {
         for (Long seatId : seatIds) {
-            if (bookingQueue.contains(seatId)) {
+            if (seatQueue.contains(seatId)) {
                 throw new IllegalStateException("이미 예약된 좌석입니다.");
             }
 
-            bookingQueue.add(seatId);
+            seatQueue.add(seatId);
         }
     }
 
