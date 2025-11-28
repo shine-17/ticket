@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -25,7 +26,10 @@ public class BookingServiceImplV2 implements BookingService {
     private final SeatService seatService;
     private final BookingRepository bookingRepository;
 
-    Lock lock = new ReentrantLock();
+    private final Set<Long> seatQueue = new HashSet<>();
+
+    // 공정 모드 (성능 DOWN)
+    private final Lock lock = new ReentrantLock(true);
 
     @Override
     public Optional<Booking> findById(String id) {
@@ -80,14 +84,20 @@ public class BookingServiceImplV2 implements BookingService {
     }
 
     private void validateSeat(List<Long> seatIds) {
+
+        // 대기 중인 예약을 타임아웃을 두면 안될 것 같고
+        // 그럼 무한 대기를 어떻게 방지하지?
         lock.lock();
 
         try {
+            for (Long seatId : seatIds) {
+                if (seatQueue.contains(seatId)) {
+                    throw new IllegalStateException("이미 예약된 좌석입니다.");
+                }
 
-            // 비즈니스 로직
-
-        } catch (Exception e) {
-
+                seatQueue.add(seatId);
+            }
+        } catch (Exception ignored) {
         } finally {
             lock.unlock();
         }
