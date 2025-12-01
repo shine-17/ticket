@@ -52,7 +52,7 @@ public class BookingServiceImplV1 implements BookingService {
         List<Seat> seats = seatService.findByIds(seatIds);
 
         // 좌석 선점 확인
-        validateSeat(seatIds);
+        assertValidateSeat(seatIds);
 
         // 좌석 선점 (좌석 상태 변경) - 동시성 문제 발생
         seatService.updateToBooked(seatIds);
@@ -77,7 +77,7 @@ public class BookingServiceImplV1 implements BookingService {
         bookingRepository.save(bookings);
     }
 
-    private synchronized void validateSeat(List<Long> seatIds) {
+    private synchronized void assertValidateSeat(List<Long> seatIds) {
         for (Long seatId : seatIds) {
             if (seatQueue.contains(seatId)) {
                 throw new IllegalStateException("이미 예약된 좌석입니다.");
