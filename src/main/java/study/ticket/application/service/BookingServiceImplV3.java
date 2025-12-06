@@ -66,7 +66,7 @@ public class BookingServiceImplV3 implements BookingService {
         List<Booking> bookings = Booking.of(member, seats);
 
         // 결제
-        pay();
+//        pay();
 
         // 예매 정보 등록
         save(bookings);
@@ -100,13 +100,4 @@ public class BookingServiceImplV3 implements BookingService {
             lock.unlock();
         }
     }
-
-    private void pay() {
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            log.error(e.getMessage());
-        }
-    }
-
 }

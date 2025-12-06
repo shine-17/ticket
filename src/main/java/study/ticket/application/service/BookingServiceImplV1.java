@@ -86,13 +86,4 @@ public class BookingServiceImplV1 implements BookingService {
             seatQueue.add(seatId);
         }
     }
-
-    private void pay() {
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            log.error(e.getMessage());
-        }
-    }
-
 }
