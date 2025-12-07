@@ -19,6 +19,7 @@ import java.util.concurrent.locks.ReentrantLock;
 //@Service
 @RequiredArgsConstructor
 @Slf4j
+// version2: ReentrantLock(fair)
 public class BookingServiceImplV2 implements BookingService {
 
     private final MemberService memberService;

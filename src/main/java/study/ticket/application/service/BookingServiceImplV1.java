@@ -16,6 +16,7 @@ import java.util.Set;
 //@Service
 @RequiredArgsConstructor
 @Slf4j
+// version1: synchronized
 public class BookingServiceImplV1 implements BookingService {
 
     private final MemberService memberService;
