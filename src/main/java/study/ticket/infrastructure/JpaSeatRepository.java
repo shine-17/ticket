@@ -1,7 +1,9 @@
 package study.ticket.infrastructure;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceContext;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Repository;
 import study.ticket.domain.Seat;
 
@@ -27,6 +29,7 @@ public class JpaSeatRepository implements SeatRepository {
     }
 
     @Override
+    @Lock(LockModeType.PESSIMISTIC_WRITE) // lock timeout
     public void updateToBooked(List<Long> seatIds) {
 
     }

@@ -26,6 +26,6 @@ public class SeatServiceImpl implements SeatService {
 
     @Override
     public void updateToBooked(List<Long> seatIds) {
-
+        seatRepository.updateToBooked(seatIds);
     }
 }
