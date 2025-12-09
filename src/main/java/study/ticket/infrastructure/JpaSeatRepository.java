@@ -31,6 +31,10 @@ public class JpaSeatRepository implements SeatRepository {
     @Override
     @Lock(LockModeType.PESSIMISTIC_WRITE) // lock timeout
     public void updateToBooked(List<Long> seatIds) {
+        // 1. 각 공연 별 좌석 데이터를 먼저 테이블에 삽입
+        // 2. 해당 데이터에 대한 lock
 
+        // 테이블 구조 변경 필요
+        // - 공연 별 좌석 데이터, 지정된 좌석 데이터
     }
 }
