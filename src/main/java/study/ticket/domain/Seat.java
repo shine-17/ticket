@@ -3,6 +3,7 @@ package study.ticket.domain;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.Version;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -43,6 +44,9 @@ public class Seat {
     private char state;
 
     private long show_id;
+
+    @Version
+    private Long version;
 
     public boolean available() {
         return state == 'A';

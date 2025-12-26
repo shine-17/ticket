@@ -4,8 +4,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.scheduling.config.Task;
 import study.ticket.application.service.BookingService;
+import study.ticket.application.service.SeatService;
 import study.ticket.domain.Booking;
+import study.ticket.domain.Seat;
+import study.ticket.domain.SeatState;
+
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
@@ -17,6 +22,9 @@ public class BookingTest {
 
     @Autowired
     private BookingService bookingService;
+
+    @Autowired
+    private SeatService seatService;
 
     @Test
     @DisplayName("동시에 한 좌석을 예매한다.")
@@ -55,7 +63,23 @@ public class BookingTest {
 
         // then
         assertThat(result).hasSize(0);
+    }
 
+    @Test
+    @DisplayName("비관적 락 테스트")
+    void pessimisticLockTest() {
+
+        // given
+        List<Long> seatIds = List.of(3L, 4L);
+
+        // when
+        seatService.updateToBooked(seatIds);
+
+        // then
+        List<Seat> seats = seatService.findByIds(seatIds);
+        boolean result = seats.stream()
+                .allMatch(Seat::available);
+        assertThat(result).isFalse();
     }
 
 
