@@ -2,6 +2,7 @@ package study.ticket.application.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import study.ticket.domain.Seat;
 import study.ticket.infrastructure.SeatRepository;
 
@@ -25,6 +26,7 @@ public class SeatServiceImpl implements SeatService {
     }
 
     @Override
+    @Transactional
     public void updateToBooked(List<Long> seatIds) {
         seatRepository.updateToBooked(seatIds);
     }
