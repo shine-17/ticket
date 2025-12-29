@@ -1,9 +1,6 @@
 package study.ticket.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -41,6 +38,7 @@ public class Seat {
         B(Blocked,Reserved 판매 불가)
         R(Refunded/Returned 환불된 좌석, 재판매 가능 여부 결정 전 임시 상태)
      */
+
     private char state;
 
     private long show_id;

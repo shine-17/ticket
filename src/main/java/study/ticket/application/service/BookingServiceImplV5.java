@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Service
+//@Service
 @RequiredArgsConstructor
 @Slf4j
 // version5: Optimistic Lock
@@ -51,9 +51,6 @@ public class BookingServiceImplV5 implements BookingService {
     public void book(String loginId, List<Long> seatIds) {
         Member member = memberService.findByLoginId(loginId).orElseThrow(() -> new IllegalStateException("아이디를 찾을 수 없습니다"));
         List<Seat> seats = seatService.findByIds(seatIds);
-
-        // 좌석 선점 확인
-//        assertValidateSeat(seatIds);
 
         // 좌석 선점 (좌석 상태 변경) - 동시성 문제 발생
         seatService.updateToBooked(seatIds);

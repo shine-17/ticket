@@ -56,9 +56,6 @@ public class BookingServiceImplV4 implements BookingService {
         Member member = memberService.findByLoginId(loginId).orElseThrow(() -> new IllegalStateException("아이디를 찾을 수 없습니다"));
         List<Seat> seats = seatService.findByIds(seatIds);
 
-        // 좌석 선점 확인
-//        assertValidateSeat(seatIds);
-
         // 좌석 선점 (좌석 상태 변경) - 동시성 문제 발생
         seatService.updateToBooked(seatIds);
 
