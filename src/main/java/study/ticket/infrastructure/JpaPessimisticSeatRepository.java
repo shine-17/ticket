@@ -1,9 +1,8 @@
 package study.ticket.infrastructure;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.QueryHint;
+import jakarta.persistence.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Repository;
 import study.ticket.domain.Seat;
@@ -15,6 +14,7 @@ import java.util.Optional;
 @Repository
 public class JpaPessimisticSeatRepository implements SeatRepository {
 
+    private static final Logger log = LoggerFactory.getLogger(JpaPessimisticSeatRepository.class);
     @PersistenceContext
     private EntityManager em;
 
@@ -31,6 +31,7 @@ public class JpaPessimisticSeatRepository implements SeatRepository {
     }
 
     @Override
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     public void updateToBooked(List<Long> seatIds) {
         /*
             1. 각 공연 별 좌석 데이터를 먼저 테이블에 삽입
@@ -50,14 +51,42 @@ public class JpaPessimisticSeatRepository implements SeatRepository {
          */
 
         // PESSIMISTIC LOCK
-        int result = em.createQuery("UPDATE seat s SET s.state = :state WHERE s.state = :available AND s.id IN :seatIds")
-                .setParameter("available", SeatState.AVAILABLE.getState())
-                .setParameter("state", SeatState.PREEMPT.getState())
-                .setParameter("seatIds", seatIds)
-//                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
-//                .setHint("javax.persistence.lock.timeout", 1000)
-                .executeUpdate();
+//        int result = em.createQuery("UPDATE seat s SET s.state = :state WHERE s.state = :available AND s.id IN :seatIds")
+//                .setParameter("available", SeatState.AVAILABLE.getState())
+//                .setParameter("state", SeatState.PREEMPT.getState())
+//                .setParameter("seatIds", seatIds)
+////                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+////                .setHint("javax.persistence.lock.timeout", 1000)
+//                .executeUpdate();
+//
+//        if (result != seatIds.size()) throw new IllegalStateException("이미 선점 중인 좌석입니다.");
 
-        if (result != seatIds.size()) throw new IllegalStateException("이미 선점 중인 좌석입니다.");
+        // PESSIMISTIC LOCK
+        List<Seat> seats = em.createQuery("SELECT s FROM seat s WHERE s.state = :available AND s.id IN :seatIds", Seat.class)
+                .setParameter("available", SeatState.AVAILABLE.getState())
+                .setParameter("seatIds", seatIds)
+                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+//                .setHint("jakarta.persistence.lock.scope", PessimisticLockScope.EXTENDED)
+                .setHint("jakarta.persistence.lock.timeout", 1000)
+                .getResultList();
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+
+        } catch (LockTimeoutException e) {
+            System.out.println("jpa timeout");
+        }
+
+//        for (Seat seat : seats) {
+//            log.info(Thread.currentThread().getName() + ": " + seat.getState());
+//            if (!seat.available()) throw new IllegalStateException("이미 선점 중인 좌석입니다.");
+//        }
+
+        if (seats.isEmpty()) {
+            throw new IllegalStateException("이미 선점 중인 좌석입니다.");
+        }
+
+        seats.forEach(Seat::preempt);
     }
 }

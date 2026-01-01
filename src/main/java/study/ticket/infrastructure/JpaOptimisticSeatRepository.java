@@ -56,10 +56,10 @@ public class JpaOptimisticSeatRepository implements SeatRepository {
                 .setParameter("seatIds", seatIds)
                 .getResultList();
 
-        for (Seat seat : seats) {
-            log.info(Thread.currentThread().getName() + ": " + seat.getState());
-            if (!seat.available()) throw new IllegalStateException("이미 선점 중인 좌석입니다.");
-        }
+//        for (Seat seat : seats) {
+//            log.info(Thread.currentThread().getName() + ": " + seat.getState());
+//            if (!seat.available()) throw new IllegalStateException("이미 선점 중인 좌석입니다.");
+//        }
 
         seats.forEach(Seat::preempt);
 
