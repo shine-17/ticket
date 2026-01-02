@@ -11,6 +11,7 @@ import study.ticket.domain.Booking;
 import study.ticket.domain.Seat;
 import study.ticket.domain.SeatState;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
@@ -35,9 +36,14 @@ public class BookingTest {
         List<Long> seatIds = List.of(1L);
 
         Thread[] threads = new Thread[THREAD_COUNT];
-        for (int i = 0; i < THREAD_COUNT; i++) {
-            threads[i] = new Thread(new Task(ids[i], seatIds, bookingService));
-        }
+//        for (int i = 0; i < THREAD_COUNT; i++) {
+//            threads[i] = new Thread(new Task(ids[i], seatIds, bookingService));
+//        }
+        threads[0] = new Thread(new Task("test1", List.of(1L, 2L), bookingService));
+        threads[1] = new Thread(new Task("test2", List.of(2L, 3L), bookingService));
+        threads[2] = new Thread(new Task("test3", List.of(1L, 3L), bookingService));
+        threads[3] = new Thread(new Task("test4", List.of(1L, 2L), bookingService));
+        threads[4] = new Thread(new Task("test5", List.of(1L), bookingService));
 
         // when
         for (Thread thread : threads) {
