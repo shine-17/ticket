@@ -43,8 +43,8 @@ public class Seat {
 
     private long show_id;
 
-    @Version
-    private Long version;
+//    @Version
+//    private Long version;
 
     public boolean available() {
         return state == 'A';
