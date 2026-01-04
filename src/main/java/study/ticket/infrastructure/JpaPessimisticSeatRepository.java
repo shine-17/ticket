@@ -62,29 +62,16 @@ public class JpaPessimisticSeatRepository implements SeatRepository {
 //        if (result != seatIds.size()) throw new IllegalStateException("이미 선점 중인 좌석입니다.");
 
         // PESSIMISTIC LOCK
-        List<Seat> seats = em.createQuery("SELECT s FROM seat s WHERE s.state = :available AND s.id IN :seatIds", Seat.class)
-                .setParameter("available", SeatState.AVAILABLE.getState())
+//        List<Seat> seats = em.createQuery("SELECT s FROM seat s WHERE s.state = :available AND s.id IN :seatIds", Seat.class)
+//                .setParameter("available", SeatState.AVAILABLE.getState())
+        List<Seat> seats = em.createQuery("SELECT s FROM seat s WHERE s.id IN :seatIds", Seat.class)
                 .setParameter("seatIds", seatIds)
                 .setLockMode(LockModeType.PESSIMISTIC_WRITE)
-//                .setHint("jakarta.persistence.lock.scope", PessimisticLockScope.EXTENDED)
-                .setHint("jakarta.persistence.lock.timeout", 1000)
                 .getResultList();
 
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-
-        } catch (LockTimeoutException e) {
-            System.out.println("jpa timeout");
-        }
-
-//        for (Seat seat : seats) {
-//            log.info(Thread.currentThread().getName() + ": " + seat.getState());
-//            if (!seat.available()) throw new IllegalStateException("이미 선점 중인 좌석입니다.");
-//        }
-
-        if (seats.isEmpty()) {
-            throw new IllegalStateException("이미 선점 중인 좌석입니다.");
+        for (Seat seat : seats) {
+            log.info(Thread.currentThread().getName() + ": " + seat.getState());
+            if (!seat.available()) throw new IllegalStateException("이미 선점 중인 좌석입니다.");
         }
 
         seats.forEach(Seat::preempt);
