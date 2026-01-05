@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -84,10 +85,15 @@ public class BookingServiceImplV6 implements BookingService {
 
     private void assertValidateSeat(List<Long> seatIds) {
         boolean result = seatIds.stream()
-                .noneMatch(seat -> redisTemplate.hasKey(String.valueOf(seat)));
+                .anyMatch(seat -> redisTemplate.hasKey(String.valueOf(seat)));
 
         if (result) {
             throw new IllegalStateException("이미 예약된 좌석입니다.");
         }
+
+        seatIds.forEach(seatId -> {
+            redisTemplate.opsForValue().set(String.valueOf(seatId), String.valueOf(true));
+            redisTemplate.expire(String.valueOf(seatId), 1, TimeUnit.MINUTES);
+        });
     }
 }
