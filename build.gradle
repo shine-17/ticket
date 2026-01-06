@@ -44,6 +44,9 @@ dependencies {
 
 	implementation 'org.postgresql:postgresql:42.7.7'
 	implementation 'mysql:mysql-connector-java:8.0.33'
+
+	// Redisson client
+	implementation 'org.redisson:redisson-spring-boot-starter:3.24.3'
 }
 
 tasks.named('test') {
