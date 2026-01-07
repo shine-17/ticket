@@ -2,9 +2,7 @@ package study.ticket.application.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import study.ticket.domain.Booking;
@@ -12,24 +10,22 @@ import study.ticket.domain.Member;
 import study.ticket.domain.Seat;
 import study.ticket.infrastructure.BookingRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-// version5: Optimistic Lock
+// version6: Redis
 public class BookingServiceImplV6 implements BookingService {
 
     private final MemberService memberService;
     private final SeatService seatService;
     private final BookingRepository bookingRepository;
-
-    private final StringRedisTemplate redisTemplate;
-//    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Override
     public Optional<Booking> findById(String id) {
@@ -58,7 +54,7 @@ public class BookingServiceImplV6 implements BookingService {
         List<Seat> seats = seatService.findByIds(seatIds);
 
         // 좌석 선점 확인
-        assertValidateSeat(seatIds);
+        assertValidateSeat(seatIds, loginId);
 
         // 좌석 선점 (좌석 상태 변경) - 동시성 문제 발생
         seatService.updateToBooked(seatIds);
@@ -83,17 +79,16 @@ public class BookingServiceImplV6 implements BookingService {
         bookingRepository.save(bookings);
     }
 
-    private void assertValidateSeat(List<Long> seatIds) {
-        boolean result = seatIds.stream()
-                .anyMatch(seat -> redisTemplate.hasKey(String.valueOf(seat)));
+    private void assertValidateSeat(List<Long> seatIds, String loginId) {
+        Map<String, String> map = seatIds.stream()
+                .collect(Collectors.toMap(
+                        String::valueOf,
+                        seatId -> loginId + ":" + LocalDateTime.now()
+                ));
 
-        if (result) {
+        Boolean result = redisTemplate.opsForValue().multiSetIfAbsent(map);
+        if (!Boolean.TRUE.equals(result)) {
             throw new IllegalStateException("이미 예약된 좌석입니다.");
         }
-
-        seatIds.forEach(seatId -> {
-            redisTemplate.opsForValue().set(String.valueOf(seatId), String.valueOf(true));
-            redisTemplate.expire(String.valueOf(seatId), 1, TimeUnit.MINUTES);
-        });
     }
 }
