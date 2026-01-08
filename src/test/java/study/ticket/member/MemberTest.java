@@ -20,6 +20,7 @@ public class MemberTest {
     void findByLoginIdTest() {
         Member member = memberService.findByLoginId("test1").orElse(null);
         System.out.println(member);
+
         assertThat(member).isNotNull();
     }
 }

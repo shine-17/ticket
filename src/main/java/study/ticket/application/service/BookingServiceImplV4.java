@@ -18,7 +18,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
-@Service
+//@Service
 @RequiredArgsConstructor
 @Slf4j
 // version4: Pessimistic Lock

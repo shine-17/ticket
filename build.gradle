@@ -40,12 +40,13 @@ dependencies {
 	implementation group: 'com.google.code.gson', name: 'gson', version: '2.10.1'
 
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+	// DB
 	implementation 'org.postgresql:postgresql:42.7.7'
 	implementation 'mysql:mysql-connector-java:8.0.33'
 
 	// Redisson client
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.redisson:redisson-spring-boot-starter:3.24.3'
 }
 
