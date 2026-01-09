@@ -2,7 +2,9 @@ package study.ticket.application.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import study.ticket.domain.Booking;
@@ -10,11 +12,7 @@ import study.ticket.domain.Member;
 import study.ticket.domain.Seat;
 import study.ticket.infrastructure.BookingRepository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +23,9 @@ public class BookingServiceImplV6 implements BookingService {
     private final MemberService memberService;
     private final SeatService seatService;
     private final BookingRepository bookingRepository;
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    private static final int MAX_SEAT_COUNT = 2;
 
     @Override
     public Optional<Booking> findById(String id) {
@@ -80,15 +80,49 @@ public class BookingServiceImplV6 implements BookingService {
     }
 
     private void assertValidateSeat(List<Long> seatIds, String loginId) {
-        Map<String, String> map = seatIds.stream()
-                .collect(Collectors.toMap(
-                        String::valueOf,
-                        seatId -> loginId + ":" + LocalDateTime.now()
-                ));
+//        int bookedSeatCount = Integer.parseInt(Objects.requireNonNull(redisTemplate.opsForValue().get(loginId)));
+//        int userSeatCount = bookedSeatCount + seatIds.size();
+//
+//        if (userSeatCount > MAX_SEAT_COUNT) {
+//            throw new IllegalStateException("1인 최대 2매까지 예매 가능합니다.");
+//        }
+//
+//        Map<String, String> map = seatIds.stream()
+//                .collect(Collectors.toMap(
+//                        String::valueOf,
+//                        seatId -> loginId + ":" + LocalDateTime.now()
+//                ));
+//        map.put(loginId, String.valueOf(userSeatCount));
+//
+//        Boolean result = redisTemplate.opsForValue().multiSetIfAbsent(map);
+//        if (!Boolean.TRUE.equals(result)) {
+//            if (result == null) {
+//                // 통신 오류
+//            }
+//
+//            throw new IllegalStateException("이미 예약된 좌석입니다.");
+//        }
+//
+//        seatIds.forEach(seatId -> redisTemplate.expire(String.valueOf(seatId), 1, TimeUnit.MINUTES));
 
-        Boolean result = redisTemplate.opsForValue().multiSetIfAbsent(map);
-        if (!Boolean.TRUE.equals(result)) {
-            throw new IllegalStateException("이미 예약된 좌석입니다.");
-        }
+        // Lua Script
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+        script.setLocation(new ClassPathResource("script/redis/seatPreempt.lua"));
+        script.setResultType(Long.class);
+
+        List<String> keys = new ArrayList<>();
+        seatIds.forEach(seatId -> keys.add("seat:" + seatId));
+        keys.add("user:booked:" + loginId);
+
+        Long result = redisTemplate.execute(
+                script,
+                keys,
+                loginId,
+                seatIds.size(),
+                MAX_SEAT_COUNT,
+                60
+        );
+
+        System.out.println("result = " + result);
     }
 }
