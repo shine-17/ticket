@@ -15,9 +15,9 @@ local maxSeat = tonumber(ARGV[3])
 local ttl = tonumber(ARGV[4])
 
 -- 현재 사용자 예약 수
-local current = tonumber(redis.call("GET", KEYS[#KEYS] or "0"))
+local current = tonumber(redis.call("GET", KEYS[#KEYS])) or 0
 
--- 사용자 제한 검사
+-- 조건 검사 1: 사용자 별 예매 개수 제한 검사
 if current + seatCount > maxSeat then
     return -1
 end
