@@ -6,6 +6,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import study.ticket.domain.Booking;
@@ -15,7 +16,7 @@ import study.ticket.infrastructure.BookingRepository;
 
 import java.util.*;
 
-@Service
+//@Service
 @RequiredArgsConstructor
 @Slf4j
 // version6: Redis
@@ -84,14 +85,10 @@ public class BookingServiceImplV6 implements BookingService {
 
     private void assertValidateSeat(List<Long> seatIds, String loginId) {
         // Lua Script
-        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
-        script.setLocation(new ClassPathResource("script/redis/seatPreempt.lua"));
-        script.setResultType(Long.class);
+        RedisScript<Long> script = getSeatPreemptScript();
 
         // KEYS: 좌석 키들 (seat:{seatId}) + 마지막에 사용자 예매 수 키 (user:booked:{userId})
-        List<String> keys = new ArrayList<>();
-        seatIds.forEach(seatId -> keys.add("seat:" + seatId));
-        keys.add("user:booked:" + loginId);
+        List<String> keys = createKeys(seatIds, loginId);
 
         // ARGV: userId, seatCount, maxSeatCount, ttl
         Long result = redisTemplate.execute(
@@ -114,5 +111,20 @@ public class BookingServiceImplV6 implements BookingService {
         }
 
         // result == 1이면 성공
+    }
+
+    private RedisScript<Long> getSeatPreemptScript() {
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+        script.setLocation(new ClassPathResource("script/redis/seatPreempt.lua"));
+        script.setResultType(Long.class);
+        return script;
+    }
+
+    private List<String> createKeys(List<Long> seatIds, String loginId) {
+        List<String> keys = new ArrayList<>();
+        seatIds.forEach(seatId -> keys.add("seat:" + seatId));
+        keys.add("user:booked:" + loginId);
+
+        return keys;
     }
 }
