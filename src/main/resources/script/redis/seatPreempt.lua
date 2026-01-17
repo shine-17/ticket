@@ -15,12 +15,12 @@ local maxSeat = tonumber(ARGV[3])
 local ttl = tonumber(ARGV[4])
 
 -- 현재 사용자 예약 수
-local current = tonumber(redis.call("GET", KEYS[#KEYS])) or 0
+--local current = tonumber(redis.call("GET", KEYS[#KEYS])) or 0
 
 -- 조건 검사 1: 사용자 별 예매 개수 제한 검사
-if current + seatCount > maxSeat then
-    return -1
-end
+--if current + seatCount > maxSeat then
+--    return -1
+--end
 
 -- 조건 검사 2: 예매할 좌석이 선점되었는지 검사
 for i = 1, #KEYS - 1 do
@@ -35,7 +35,7 @@ for i = 1, #KEYS - 1 do
 end
 
 -- 사용자 예약 수 증가 + TTL
-redis.call("INCRBY", KEYS[#KEYS], seatCount)
-redis.call("EXPIRE", KEYS[#KEYS], ttl)
+--redis.call("INCRBY", KEYS[#KEYS], seatCount)
+--redis.call("EXPIRE", KEYS[#KEYS], ttl)
 
 return 1  -- 성공
