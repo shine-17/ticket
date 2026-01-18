@@ -16,7 +16,7 @@ import study.ticket.infrastructure.BookingRepository;
 
 import java.util.*;
 
-//@Service
+@Service
 @RequiredArgsConstructor
 @Slf4j
 // version6: Redis
@@ -59,6 +59,13 @@ public class BookingServiceImplV6 implements BookingService {
 
         // 좌석 선점 확인
         assertValidateSeat(seatIds, loginId);
+
+        // 사용자 별 예매 개수 제한
+        int updatedResult = memberService.increaseBookingCount(loginId, 1, seatIds.size(), MAX_SEAT_COUNT);
+        if (updatedResult == 0) {
+            throw new IllegalStateException("1인 최대 " + MAX_SEAT_COUNT + "매까지 예매 가능합니다.");
+        }
+
 
         // 좌석 선점 (좌석 상태 변경) - 동시성 문제 발생
         seatService.updateToBooked(seatIds);
@@ -104,9 +111,11 @@ public class BookingServiceImplV6 implements BookingService {
         // -1: 사용자 제한 초과, 0: 좌석이 이미 선점됨, 1: 성공
         if (result == null) {
             throw new IllegalStateException("좌석 선점 중 오류가 발생했습니다.");
-        } else if (result == -1) {
-            throw new IllegalStateException("1인 최대 " + MAX_SEAT_COUNT + "매까지 예매 가능합니다.");
-        } else if (result == 0) {
+        }
+//        else if (result == -1) {
+//            throw new IllegalStateException("1인 최대 " + MAX_SEAT_COUNT + "매까지 예매 가능합니다.");
+//        }
+        else if (result == 0) {
             throw new IllegalStateException("이미 예약된 좌석입니다.");
         }
 
