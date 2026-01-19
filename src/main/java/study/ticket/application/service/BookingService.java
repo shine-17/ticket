@@ -12,7 +12,7 @@ public interface BookingService {
     Optional<Booking> findByMemberId(String loginId);
     List<Booking> findByIds(List<Long> ids);
     List<Booking> findAll();
-    void book(String loginId, List<Long> seatIds);
+    void book(String loginId, long showId, List<Long> seatIds);
     void save(Booking booking);
     void save(List<Booking> bookings);
 
