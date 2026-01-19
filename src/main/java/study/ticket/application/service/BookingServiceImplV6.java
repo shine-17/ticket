@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
@@ -53,24 +52,19 @@ public class BookingServiceImplV6 implements BookingService {
 
     @Override
     @Transactional
-    public void book(String loginId, List<Long> seatIds) {
+    public void book(String loginId, long showId, List<Long> seatIds) {
         Member member = memberService.findByLoginId(loginId).orElseThrow(() -> new IllegalStateException("아이디를 찾을 수 없습니다"));
         List<Seat> seats = seatService.findByIds(seatIds);
 
         // 좌석 선점 확인
         assertValidateSeat(seatIds, loginId);
 
-        // 사용자 별 예매 개수 제한
-        int updatedResult = memberService.increaseBookingCount(loginId, 1, seatIds.size(), MAX_SEAT_COUNT);
-        if (updatedResult == 0) {
-            throw new IllegalStateException("1인 최대 " + MAX_SEAT_COUNT + "매까지 예매 가능합니다.");
-        }
+        // 사용자 별 예매 개수 제한 (1인당 최대 2매)
+        memberService.increaseBookingCount(loginId, showId, seatIds.size(), MAX_SEAT_COUNT);
 
-
-        // 좌석 선점 (좌석 상태 변경) - 동시성 문제 발생
+        // 좌석 선점 (좌석 상태 변경)
         seatService.updateToBooked(seatIds);
 
-        // 한 명의 회원은 최대 2매까지 예매가능
         List<Booking> bookings = Booking.of(member, seats);
 
         // 결제
@@ -107,14 +101,10 @@ public class BookingServiceImplV6 implements BookingService {
                 String.valueOf(SEAT_TTL)         // ARGV[4]: TTL (초)
         );
 
-        // 결과 처리
-        // -1: 사용자 제한 초과, 0: 좌석이 이미 선점됨, 1: 성공
+        // 0: 좌석이 이미 선점됨, 1: 성공
         if (result == null) {
             throw new IllegalStateException("좌석 선점 중 오류가 발생했습니다.");
         }
-//        else if (result == -1) {
-//            throw new IllegalStateException("1인 최대 " + MAX_SEAT_COUNT + "매까지 예매 가능합니다.");
-//        }
         else if (result == 0) {
             throw new IllegalStateException("이미 예약된 좌석입니다.");
         }
