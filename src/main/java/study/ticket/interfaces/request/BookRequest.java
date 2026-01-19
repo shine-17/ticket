@@ -10,5 +10,6 @@ import java.util.List;
 public class BookRequest {
     private String id;
     private String loginId;
+    private long showId;
     private List<Long> seatIds;
 }

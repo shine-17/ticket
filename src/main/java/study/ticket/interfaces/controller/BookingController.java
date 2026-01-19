@@ -26,7 +26,7 @@ public class BookingController {
     public BookResponse book(BookRequest request) {
 
         // 티켓 예매
-        bookingService.book(request.getLoginId(), request.getSeatIds());
+        bookingService.book(request.getLoginId(), request.getShowId(), request.getSeatIds());
 
         // 예매 정보 반환
         Optional<Booking> booking = bookingService.findById(request.getLoginId());
