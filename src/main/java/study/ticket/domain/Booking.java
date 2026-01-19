@@ -17,7 +17,7 @@ public class Booking {
     private String id;
 
     @OneToOne
-    @JoinColumn(name = "member_id", referencedColumnName = "login_id")
+    @JoinColumn(name = "member_id", referencedColumnName = "id")
     private Member member;
 
     @OneToOne
@@ -29,7 +29,7 @@ public class Booking {
     }
 
     public static List<Booking> of(Member member, List<Seat> seats) {
-        if (seats.size() > 2) throw new IllegalStateException("1인 최대 2매까지 예매 가능합니다.");
+//        if (seats.size() > 2) throw new IllegalStateException("1인 최대 2매까지 예매 가능합니다.");
 
         List<Booking> bookings = new ArrayList<>();
         for (Seat seat : seats) {
