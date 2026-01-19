@@ -4,14 +4,10 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.data.jpa.repository.Lock;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import study.ticket.domain.Seat;
 
 import java.util.List;
 import java.util.Optional;
-
-import static study.ticket.application.service.BookingService.log;
 
 //@Repository
 public class JpaOptimisticSeatRepository implements SeatRepository {
@@ -32,8 +28,8 @@ public class JpaOptimisticSeatRepository implements SeatRepository {
     }
 
     @Override
-//    @Lock(LockModeType.OPTIMISTIC)
-    public void updateToBooked(List<Long> seatIds) {
+    @Lock(LockModeType.OPTIMISTIC)
+    public void updateToBooked(long showId, List<Long> seatIds) {
         /*
             1. 각 공연 별 좌석 데이터를 먼저 테이블에 삽입
             2. 해당 데이터에 대한 lock
@@ -51,17 +47,10 @@ public class JpaOptimisticSeatRepository implements SeatRepository {
             Q. 공연장 별 좌석수를 공연 테이블에 컬럼으로 넣기 vs 쿼리로 공연장 별 좌석수를 카운팅하기
          */
 
-        // OPTIMISTIC LOCK
         List<Seat> seats = em.createQuery("SELECT s FROM seat s WHERE s.id IN :seatIds", Seat.class)
                 .setParameter("seatIds", seatIds)
                 .getResultList();
 
-//        for (Seat seat : seats) {
-//            log.info(Thread.currentThread().getName() + ": " + seat.getState());
-//            if (!seat.available()) throw new IllegalStateException("이미 선점 중인 좌석입니다.");
-//        }
-
         seats.forEach(Seat::preempt);
-
     }
 }

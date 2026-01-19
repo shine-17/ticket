@@ -3,10 +3,8 @@ package study.ticket.infrastructure;
 import jakarta.persistence.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Repository;
 import study.ticket.domain.Seat;
-import study.ticket.domain.SeatState;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +13,7 @@ import java.util.Optional;
 public class JpaPessimisticSeatRepository implements SeatRepository {
 
     private static final Logger log = LoggerFactory.getLogger(JpaPessimisticSeatRepository.class);
+
     @PersistenceContext
     private EntityManager em;
 
@@ -31,8 +30,8 @@ public class JpaPessimisticSeatRepository implements SeatRepository {
     }
 
     @Override
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    public void updateToBooked(List<Long> seatIds) {
+//    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    public void updateToBooked(long showId, List<Long> seatIds) {
         /*
             1. 각 공연 별 좌석 데이터를 먼저 테이블에 삽입
             2. 해당 데이터에 대한 lock
@@ -51,25 +50,15 @@ public class JpaPessimisticSeatRepository implements SeatRepository {
          */
 
         // PESSIMISTIC LOCK
-//        int result = em.createQuery("UPDATE seat s SET s.state = :state WHERE s.state = :available AND s.id IN :seatIds")
-//                .setParameter("available", SeatState.AVAILABLE.getState())
-//                .setParameter("state", SeatState.PREEMPT.getState())
-//                .setParameter("seatIds", seatIds)
-////                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
-////                .setHint("javax.persistence.lock.timeout", 1000)
-//                .executeUpdate();
-//
-//        if (result != seatIds.size()) throw new IllegalStateException("이미 선점 중인 좌석입니다.");
-
-        // PESSIMISTIC LOCK
-//        List<Seat> seats = em.createQuery("SELECT s FROM seat s WHERE s.state = :available AND s.id IN :seatIds", Seat.class)
-//                .setParameter("available", SeatState.AVAILABLE.getState())
-        List<Seat> seats = em.createQuery("SELECT s FROM seat s WHERE s.id IN :seatIds", Seat.class)
+        List<Seat> seats = em.createQuery("SELECT s FROM seat s WHERE s.show_id = :showId AND s.id IN :seatIds", Seat.class)
+                .setParameter("showId", showId)
                 .setParameter("seatIds", seatIds)
                 .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+//                .setHint("javax.persistence.lock.timeout", 1000)
                 .getResultList();
 
         for (Seat seat : seats) {
+//            em.refresh(seat);
             log.info(Thread.currentThread().getName() + ": " + seat.getState());
             if (!seat.available()) throw new IllegalStateException("이미 선점 중인 좌석입니다.");
         }
