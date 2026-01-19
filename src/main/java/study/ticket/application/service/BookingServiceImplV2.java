@@ -2,7 +2,6 @@ package study.ticket.application.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import study.ticket.domain.Booking;
 import study.ticket.domain.Member;
@@ -53,7 +52,7 @@ public class BookingServiceImplV2 implements BookingService {
 
     @Override
     @Transactional
-    public void book(String loginId, List<Long> seatIds) {
+    public void book(String loginId, long showId, List<Long> seatIds) {
         Member member = memberService.findByLoginId(loginId).orElseThrow(() -> new IllegalStateException("아이디를 찾을 수 없습니다"));
         List<Seat> seats = seatService.findByIds(seatIds);
 
