@@ -8,5 +8,5 @@ import java.util.Optional;
 public interface SeatRepository {
     Optional<Seat> findById(long id);
     List<Seat> findByIds(List<Long> seatIds);
-    void updateToBooked(List<Long> seatIds);
+    void updateToBooked(long showId, List<Long> seatIds);
 }

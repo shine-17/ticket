@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import study.ticket.domain.Booking;
 import study.ticket.domain.Member;
 import study.ticket.domain.Seat;
+import study.ticket.domain.Show;
 import study.ticket.infrastructure.BookingRepository;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class BookingServiceImplV5 implements BookingService {
 
     private final MemberService memberService;
     private final SeatService seatService;
+    private final ShowService showService;
     private final BookingRepository bookingRepository;
 
     private final Set<Long> bookingQueue = ConcurrentHashMap.newKeySet();
@@ -50,12 +52,13 @@ public class BookingServiceImplV5 implements BookingService {
     public void book(String loginId, long showId, List<Long> seatIds) {
         Member member = memberService.findByLoginId(loginId).orElseThrow(() -> new IllegalStateException("아이디를 찾을 수 없습니다"));
         List<Seat> seats = seatService.findByIds(seatIds);
+        Show show = showService.findById(showId).orElseThrow(() -> new IllegalStateException("공연을 찾을 수 없습니다"));
 
         // 좌석 선점 (좌석 상태 변경) - 동시성 문제 발생
-        seatService.updateToBooked(seatIds);
+        seatService.updateToBooked(showId, seatIds);
 
         // 한 명의 회원은 최대 2매까지 예매가능
-        List<Booking> bookings = Booking.of(member, seats);
+        List<Booking> bookings = Booking.of(member, show, seats);
 
         // 결제
         pay();
