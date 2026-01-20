@@ -21,7 +21,10 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
-    public int increaseBookingCount(String loginId, long showId, int seatCount, int compareCount) {
-        return memberRepository.increaseBookingCount(loginId, showId, seatCount, compareCount);
+    public void increaseBookingCount(String loginId, long showId, int seatCount, int compareCount) {
+        int updated = memberRepository.increaseBookingCount(loginId, showId, seatCount, compareCount);
+        if (updated == 0) {
+            throw new IllegalStateException("1인 최대 " + compareCount + "매까지 예매 가능합니다.");
+        }
     }
 }
