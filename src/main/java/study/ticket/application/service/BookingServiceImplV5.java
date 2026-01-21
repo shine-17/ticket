@@ -25,8 +25,6 @@ public class BookingServiceImplV5 implements BookingService {
     private final ShowService showService;
     private final BookingRepository bookingRepository;
 
-    private final Set<Long> bookingQueue = ConcurrentHashMap.newKeySet();
-
     @Override
     public Optional<Booking> findById(String id) {
         return bookingRepository.findById(id);
