@@ -6,21 +6,21 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import study.ticket.domain.Booking;
 import study.ticket.domain.Member;
 import study.ticket.domain.Seat;
 import study.ticket.domain.Show;
 import study.ticket.infrastructure.BookingRepository;
+import study.ticket.infrastructure.redis.seat.RedisKeys;
 
 import java.util.*;
 import java.util.stream.Stream;
 
-@Service
+//@Service
 @RequiredArgsConstructor
 @Slf4j
-// version6: Redis
+// version6: Redis (Lua Script)
 public class BookingServiceImplV6 implements BookingService {
 
     private final MemberService memberService;
@@ -34,9 +34,6 @@ public class BookingServiceImplV6 implements BookingService {
     private static final int MAX_SEAT_COUNT = 2;
     private static final int SEAT_TTL = 60; // seconds
     private static final int BOOKED_TTL = 86400; // seconds
-
-    private static final String BOOKED_KEY_FORMAT = "show:%s:seat:booked:%s";
-    private static final String PREEMPT_KEY_FORMAT = "show:%s:seat:preempt:%s";
 
     @Override
     public Optional<Booking> findById(String id) {
@@ -96,28 +93,6 @@ public class BookingServiceImplV6 implements BookingService {
         bookingRepository.save(bookings);
     }
 
-    private void cacheBookedSeat(String loginId, long showId, List<Long> seatIds) {
-        // Lua Script
-        RedisScript<Long> script = getLuaScript("script/redis/cacheOfBookedSeat.lua", Long.class);
-
-        List<String> keys = getKeys(showId, seatIds);
-
-        // ARGV: userId, seatCount, ttl
-        Long result = redisTemplate.execute(
-                script,
-                keys,
-                loginId,                         // ARGV[1]: 사용자 아이디
-                String.valueOf(seatIds.size()),  // ARGV[2]: 예매할 좌석 개수
-                String.valueOf(BOOKED_TTL)       // ARGV[3]: TTL (초)
-        );
-
-        if (result == null) {
-            throw new IllegalStateException("예매 중 오류가 발생했습니다.");
-        }
-
-        // result == 1이면 성공
-    }
-
     private void assertValidateSeat(String loginId, long showId, List<Long> seatIds) {
         // Lua Script
         RedisScript<Long> script = getLuaScript("script/redis/validateSeat.lua", Long.class);
@@ -156,8 +131,8 @@ public class BookingServiceImplV6 implements BookingService {
 
     private List<String> getKeys(long showId, List<Long> seatIds) {
         return Stream.concat(
-                generateKeys(BOOKED_KEY_FORMAT, showId, seatIds).stream(),
-                generateKeys(PREEMPT_KEY_FORMAT, showId, seatIds).stream()
+                RedisKeys.BOOKED.generateKeys(showId, seatIds).stream(),
+                RedisKeys.PREEMPTED.generateKeys(showId, seatIds).stream()
         ).toList();
     }
 
@@ -165,5 +140,27 @@ public class BookingServiceImplV6 implements BookingService {
         List<String> keys = new ArrayList<>();
         seatIds.forEach(seatId -> keys.add(String.format(keyFormat, showId, seatId)));
         return keys;
+    }
+
+    private void cacheBookedSeat(String loginId, long showId, List<Long> seatIds) {
+        // Lua Script
+        RedisScript<Long> script = getLuaScript("script/redis/cacheOfBookedSeat.lua", Long.class);
+
+        List<String> keys = getKeys(showId, seatIds);
+
+        // ARGV: userId, seatCount, ttl
+        Long result = redisTemplate.execute(
+                script,
+                keys,
+                loginId,                         // ARGV[1]: 사용자 아이디
+                String.valueOf(seatIds.size()),  // ARGV[2]: 예매할 좌석 개수
+                String.valueOf(BOOKED_TTL)       // ARGV[3]: TTL (초)
+        );
+
+        if (result == null) {
+            throw new IllegalStateException("예매 중 오류가 발생했습니다.");
+        }
+
+        // result == 1이면 성공
     }
 }
