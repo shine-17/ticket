@@ -9,7 +9,7 @@ import study.ticket.domain.Seat;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
+//@Repository
 public class JpaPessimisticSeatRepository implements SeatRepository {
 
     private static final Logger log = LoggerFactory.getLogger(JpaPessimisticSeatRepository.class);
