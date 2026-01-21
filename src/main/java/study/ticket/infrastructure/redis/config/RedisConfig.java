@@ -1,4 +1,4 @@
-package study.ticket.interfaces.config;
+package study.ticket.infrastructure.redis.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
