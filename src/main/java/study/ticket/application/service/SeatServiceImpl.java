@@ -28,6 +28,6 @@ public class SeatServiceImpl implements SeatService {
     @Override
     @Transactional
     public void updateToBooked(long showId, List<Long> seatIds) {
-        seatRepository.updateToBooked(showId, seatIds);
+        seatRepository.updateToBookedOrThrow(showId, seatIds);
     }
 }

@@ -31,7 +31,7 @@ public class JpaPessimisticSeatRepository implements SeatRepository {
 
     @Override
 //    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    public void updateToBooked(long showId, List<Long> seatIds) {
+    public void updateToBookedOrThrow(long showId, List<Long> seatIds) {
         /*
             1. 각 공연 별 좌석 데이터를 먼저 테이블에 삽입
             2. 해당 데이터에 대한 lock
