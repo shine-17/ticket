@@ -4,12 +4,14 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.stereotype.Repository;
 import study.ticket.domain.Seat;
+import study.ticket.domain.SeatState;
 
 import java.util.List;
 import java.util.Optional;
 
-//@Repository
+@Repository
 public class JpaOptimisticSeatRepository implements SeatRepository {
 
     @PersistenceContext
@@ -29,7 +31,7 @@ public class JpaOptimisticSeatRepository implements SeatRepository {
 
     @Override
     @Lock(LockModeType.OPTIMISTIC)
-    public void updateToBooked(long showId, List<Long> seatIds) {
+    public void updateToBookedOrThrow(long showId, List<Long> seatIds) {
         /*
             1. 각 공연 별 좌석 데이터를 먼저 테이블에 삽입
             2. 해당 데이터에 대한 lock
@@ -47,7 +49,9 @@ public class JpaOptimisticSeatRepository implements SeatRepository {
             Q. 공연장 별 좌석수를 공연 테이블에 컬럼으로 넣기 vs 쿼리로 공연장 별 좌석수를 카운팅하기
          */
 
-        List<Seat> seats = em.createQuery("SELECT s FROM seat s WHERE s.id IN :seatIds", Seat.class)
+        List<Seat> seats = em.createQuery("SELECT s FROM seat s WHERE s.show_id = :showId AND s.state = :available AND s.id IN :seatIds", Seat.class)
+                .setParameter("showId", showId)
+                .setParameter("available", SeatState.AVAILABLE.getState())
                 .setParameter("seatIds", seatIds)
                 .getResultList();
 
