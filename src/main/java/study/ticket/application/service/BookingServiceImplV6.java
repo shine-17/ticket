@@ -64,12 +64,12 @@ public class BookingServiceImplV6 implements BookingService {
         // 사용자 별 예매 개수 제한 (1인당 최대 2매)
         memberService.increaseBookingCount(loginId, showId, seatIds.size(), MAX_SEAT_COUNT);
 
+        // 좌석 선점 (좌석 상태 변경)
+        seatService.updateToBooked(showId, seatIds);
+
         Member member = memberService.findByLoginId(loginId).orElseThrow(() -> new IllegalStateException("아이디를 찾을 수 없습니다"));
         List<Seat> seats = seatService.findByIds(seatIds);
         Show show = showService.findById(showId).orElseThrow(() -> new IllegalStateException("공연을 찾을 수 없습니다"));
-
-        // 좌석 선점 (좌석 상태 변경)
-        seatService.updateToBooked(showId, seatIds);
 
         List<Booking> bookings = Booking.of(member, show, seats);
 
@@ -134,12 +134,6 @@ public class BookingServiceImplV6 implements BookingService {
                 RedisKeys.BOOKED.generateKeys(showId, seatIds).stream(),
                 RedisKeys.PREEMPTED.generateKeys(showId, seatIds).stream()
         ).toList();
-    }
-
-    private List<String> generateKeys(String keyFormat, long showId, List<Long> seatIds) {
-        List<String> keys = new ArrayList<>();
-        seatIds.forEach(seatId -> keys.add(String.format(keyFormat, showId, seatId)));
-        return keys;
     }
 
     private void cacheBookedSeat(String loginId, long showId, List<Long> seatIds) {
