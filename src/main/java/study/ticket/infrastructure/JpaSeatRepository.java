@@ -4,11 +4,12 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
 import study.ticket.domain.Seat;
+import study.ticket.domain.SeatState;
 
 import java.util.List;
 import java.util.Optional;
 
-@Repository
+//@Repository
 public class JpaSeatRepository implements SeatRepository {
 
     @PersistenceContext
@@ -27,11 +28,16 @@ public class JpaSeatRepository implements SeatRepository {
     }
 
     @Override
-    public void updateToBooked(List<Long> seatIds) {
-        List<Seat> seats = em.createQuery("SELECT s FROM seat s WHERE s.id IN :seatIds", Seat.class)
+    public void updateToBookedOrThrow(long showId, List<Long> seatIds) {
+        int result = em.createQuery("UPDATE seat s SET s.state = :state WHERE s.show_id = :showId AND s.state = :available AND s.id IN :seatIds")
+                .setParameter("showId", showId)
+                .setParameter("available", SeatState.AVAILABLE.getState())
+                .setParameter("state", SeatState.PREEMPT.getState())
                 .setParameter("seatIds", seatIds)
-                .getResultList();
+                .executeUpdate();
 
-        seats.forEach(Seat::preempt);
+        if (result != seatIds.size()) {
+            throw new IllegalStateException("이미 예약된 좌석입니다.");
+        }
     }
 }
