@@ -1,27 +1,24 @@
 package study.ticket.book;
 
-import org.aspectj.lang.annotation.Before;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.redisson.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.scheduling.config.Task;
 import study.ticket.application.service.BookingService;
+import study.ticket.application.service.MemberService;
 import study.ticket.application.service.SeatService;
 import study.ticket.domain.Booking;
 import study.ticket.domain.Seat;
-import study.ticket.domain.SeatState;
+import study.ticket.infrastructure.redis.seat.RedisKeys;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -32,28 +29,16 @@ public class BookingTest {
 
     @Autowired
     private BookingService bookingService;
-
     @Autowired
     private SeatService seatService;
+    @Autowired
+    private MemberService memberService;
 
     @Autowired
-    private StringRedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
-    @Test
-    void redisTest() {
-//        redisTemplate.opsForValue().set("1", "1");
-        redisTemplate.opsForValue().set("5", "5");
-
-        Map<String, String> map = new HashMap<>();
-        map.put("1", "1");
-        map.put("2", "2");
-        map.put("3", "3");
-        map.put("4", "4");
-        map.put("5", "2");
-
-        Boolean result = redisTemplate.opsForValue().multiSetIfAbsent(map);
-        assertThat(result).isFalse();
-    }
+    @Autowired
+    private RedissonClient redisson;
 
     @BeforeEach
     void before() {
@@ -118,9 +103,10 @@ public class BookingTest {
 
         // given
         List<Long> seatIds = List.of(3L, 4L);
+        long showId = 1;
 
         // when
-        seatService.updateToBooked(seatIds);
+        seatService.updateToBooked(showId, seatIds);
 
         // then
         List<Seat> seats = seatService.findByIds(seatIds);
@@ -128,7 +114,6 @@ public class BookingTest {
                 .allMatch(Seat::available);
         assertThat(result).isFalse();
     }
-
 
     static class Task implements Runnable {
         private final String loginId;
@@ -143,7 +128,110 @@ public class BookingTest {
 
         @Override
         public void run() {
-            bookingService.book(loginId, seatIds);
+            bookingService.book(loginId, 1, seatIds);
+        }
+    }
+
+    @Test
+    void redisLockTest1() throws InterruptedException {
+        String key = "seat:1";
+
+        Runnable runnable = () -> {
+            Boolean result = redisTemplate.opsForValue()
+                    .setIfAbsent(key, Thread.currentThread().getName(), 30, TimeUnit.SECONDS);
+
+            System.out.println(Thread.currentThread().getName() + ": " + result);
+        };
+
+        concurrentTestTemplate(runnable);
+    }
+
+    @Test
+    void redisLockTest2() throws InterruptedException {
+        List<Long> seatIds = List.of(1L, 2L);
+        String loginId = "test1";
+
+        Runnable runnable = () -> {
+//                RLock[] rLocks = seatIds.stream()
+//                        .map(seatId -> redisson.getLock(String.valueOf(seatId)))
+//                        .toArray(RLock[]::new);
+//
+//                RLock multiLock = redisson.getMultiLock(rLocks);
+
+            List<RLock> rLocks = seatIds.stream()
+                    .map(seatId -> redisson.getLock(String.valueOf(seatId)))
+                    .collect(Collectors.toList());
+            rLocks.add(redisson.getLock(loginId));
+
+            RLock multiLock = redisson.getMultiLock(rLocks.toArray(RLock[]::new));
+
+            try {
+                boolean result = multiLock.tryLock(3, 30, TimeUnit.SECONDS);
+
+                if (!result) {
+                    throw new IllegalStateException("이미 예약된 좌석입니다.");
+                }
+
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+//                finally {
+//                    multiLock.unlock();
+//                }
+        };
+
+        concurrentTestTemplate(runnable);
+    }
+
+    @Test
+    void redisLockTest3() throws InterruptedException {
+
+        String loginId = "test1";
+        long showId = 1;
+        int seatCount = 1;
+        int compareCount = 2;
+
+        Runnable runnable = () -> {
+            try {
+                memberService.increaseBookingCount(loginId, showId, seatCount, compareCount);
+                System.out.println(Thread.currentThread().getName() + ": OK");
+            } catch (IllegalStateException e) {
+                System.out.println(Thread.currentThread().getName() + ": FAIL - " + e.getMessage());
+            }
+        };
+
+        concurrentTestTemplate(runnable);
+    }
+
+    @Test
+    void redisLockTest4() {
+        String key1 = "seat:booked:1";
+        String key2 = "seat:booked:2";
+
+        List<Object> values = redisTemplate.opsForValue().multiGet(List.of(key2));
+
+        System.out.println(values);
+        System.out.println("list size: " + values.size());
+
+        values.forEach(value -> {
+            if (value == null) {
+                throw new IllegalStateException("이미 예약된 좌석입니다.");
+            }
+        });
+    }
+
+    void concurrentTestTemplate(Runnable runnable) throws InterruptedException {
+        Thread[] threads = new Thread[THREAD_COUNT];
+
+        for (int i = 0; i < THREAD_COUNT; i++) {
+            threads[i] = new Thread(runnable);
+        }
+
+        for (Thread thread : threads) {
+            thread.start();
+        }
+        for (Thread thread : threads) {
+            thread.join();
         }
     }
 
