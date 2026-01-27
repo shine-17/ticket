@@ -33,7 +33,7 @@ public class BookingServiceImplV2 implements BookingService {
     private final Lock lock = new ReentrantLock(true);
 
     @Override
-    public Optional<Booking> findById(String id) {
+    public Optional<Booking> findById(long id) {
         return bookingRepository.findById(id);
     }
 

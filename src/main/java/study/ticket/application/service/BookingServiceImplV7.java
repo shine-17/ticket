@@ -3,7 +3,6 @@ package study.ticket.application.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import study.ticket.domain.Booking;
 import study.ticket.domain.Member;
@@ -17,7 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-@Service
+//@Service
 @RequiredArgsConstructor
 @Slf4j
 // version7: Redis
@@ -36,7 +35,7 @@ public class BookingServiceImplV7 implements BookingService {
     private static final int BOOKED_TTL = 86400; // seconds
 
     @Override
-    public Optional<Booking> findById(String id) {
+    public Optional<Booking> findById(long id) {
         return bookingRepository.findById(id);
     }
 

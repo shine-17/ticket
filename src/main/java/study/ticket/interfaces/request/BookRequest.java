@@ -2,13 +2,15 @@ package study.ticket.interfaces.request;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.List;
 
 @Getter
 @Setter
+@ToString
 public class BookRequest {
-    private String id;
+    private long id;
     private String loginId;
     private long showId;
     private List<Long> seatIds;

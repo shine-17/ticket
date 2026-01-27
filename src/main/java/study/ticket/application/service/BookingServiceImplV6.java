@@ -36,7 +36,7 @@ public class BookingServiceImplV6 implements BookingService {
     private static final int BOOKED_TTL = 86400; // seconds
 
     @Override
-    public Optional<Booking> findById(String id) {
+    public Optional<Booking> findById(long id) {
         return bookingRepository.findById(id);
     }
 

@@ -29,7 +29,7 @@ public class BookingServiceImplV1 implements BookingService {
 //    private final Set<Long> bookingQueue = ConcurrentHashMap.newKeySet();
 
     @Override
-    public Optional<Booking> findById(String id) {
+    public Optional<Booking> findById(long id) {
         return bookingRepository.findById(id);
     }
 

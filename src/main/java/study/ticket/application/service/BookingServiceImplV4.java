@@ -2,7 +2,6 @@ package study.ticket.application.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import study.ticket.domain.Booking;
 import study.ticket.domain.Member;
@@ -29,7 +28,7 @@ public class BookingServiceImplV4 implements BookingService {
     private final Set<Long> bookingQueue = ConcurrentHashMap.newKeySet();
 
     @Override
-    public Optional<Booking> findById(String id) {
+    public Optional<Booking> findById(long id) {
         return bookingRepository.findById(id);
     }
 
