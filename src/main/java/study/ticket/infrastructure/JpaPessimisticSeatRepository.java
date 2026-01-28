@@ -9,7 +9,7 @@ import study.ticket.domain.Seat;
 import java.util.List;
 import java.util.Optional;
 
-//@Repository
+@Repository("jpaPessimisticSeatRepository")
 public class JpaPessimisticSeatRepository implements SeatRepository {
 
     private static final Logger log = LoggerFactory.getLogger(JpaPessimisticSeatRepository.class);
@@ -59,7 +59,6 @@ public class JpaPessimisticSeatRepository implements SeatRepository {
 
         for (Seat seat : seats) {
 //            em.refresh(seat);
-            log.info(Thread.currentThread().getName() + ": " + seat.getState());
             if (!seat.available()) throw new IllegalStateException("이미 선점 중인 좌석입니다.");
         }
 

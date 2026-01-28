@@ -9,7 +9,7 @@ import study.ticket.domain.SeatState;
 import java.util.List;
 import java.util.Optional;
 
-//@Repository
+@Repository("jpaSeatRepository")
 public class JpaSeatRepository implements SeatRepository {
 
     @PersistenceContext

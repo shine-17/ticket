@@ -11,7 +11,7 @@ import study.ticket.domain.SeatState;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
+@Repository("jpaOptimisticSeatRepository")
 public class JpaOptimisticSeatRepository implements SeatRepository {
 
     @PersistenceContext
