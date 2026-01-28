@@ -14,7 +14,7 @@ import java.util.List;
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
+    private long id;
 
     @OneToOne
     @JoinColumn(name = "member_id", referencedColumnName = "id")

@@ -17,7 +17,7 @@ public class JpaBookingRepository implements BookingRepository {
     private EntityManager em;
 
     @Override
-    public Optional<Booking> findById(String id) {
+    public Optional<Booking> findById(long id) {
         return Optional.ofNullable(em.find(Booking.class, id));
     }
 
