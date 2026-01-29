@@ -5,17 +5,19 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.redisson.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
-import study.ticket.application.service.BookingService;
-import study.ticket.application.service.MemberService;
-import study.ticket.application.service.SeatService;
+import study.ticket.application.service.command.booking.BookingCommandService;
+import study.ticket.application.service.command.member.MemberCommandService;
+import study.ticket.application.service.command.seat.SeatCommandService;
+import study.ticket.application.service.command.show.ShowCommandService;
+import study.ticket.application.service.query.booking.BookingQueryService;
+import study.ticket.application.service.query.seat.SeatQueryService;
 import study.ticket.domain.Booking;
 import study.ticket.domain.Seat;
-import study.ticket.infrastructure.redis.seat.RedisKeys;
+import study.ticket.infrastructure.command.booking.BookingCommandRepository;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -27,12 +29,24 @@ public class BookingTest {
 
     private static final int THREAD_COUNT = 5;
 
+    @Autowired @Qualifier("seatServiceWithJpa")
+    SeatCommandService seatCommandService;
+    @Autowired @Qualifier("bookingServiceWithRedis")
+    BookingCommandService bookingCommandService;
+
     @Autowired
-    private BookingService bookingService;
+    BookingQueryService bookingQueryService;
     @Autowired
-    private SeatService seatService;
+    SeatQueryService seatQueryService;
+
     @Autowired
-    private MemberService memberService;
+    private BookingCommandRepository bookingCommandRepository;
+
+    @Autowired
+    private MemberCommandService memberCommandService;
+
+    @Autowired
+    private ShowCommandService showCommandService;
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
@@ -42,7 +56,13 @@ public class BookingTest {
 
     @BeforeEach
     void before() {
-        redisTemplate.opsForValue().getOperations().delete(List.of("1", "2", "3"));
+//        redisTemplate.opsForValue().getOperations().delete(List.of("1", "2", "3"));
+
+//        BookingServiceConfig bookingServiceConfig = new BookingServiceConfig();
+//        SeatServiceConfig seatServiceConfig = new SeatServiceConfig();
+//        seatService = seatServiceConfig.seatServiceWithPessimistic();
+//        bookingService = bookingServiceConfig.bookingServiceV4(seatService, bookingRepository, memberService, showService);
+
     }
 
     @Test
@@ -54,9 +74,9 @@ public class BookingTest {
         List<Long> seatIds = List.of(1L);
 
         Thread[] threads = new Thread[THREAD_COUNT];
-//        for (int i = 0; i < THREAD_COUNT; i++) {
-//            threads[i] = new Thread(new Task(ids[i], seatIds, bookingService));
-//        }
+        for (int i = 0; i < THREAD_COUNT; i++) {
+            threads[i] = new Thread(new Task(ids[i], seatIds, bookingCommandService));
+        }
 
 //        threads[0] = new Thread(new Task("test1", List.of(1L, 2L), bookingService));
 //        threads[1] = new Thread(new Task("test2", List.of(2L, 3L), bookingService));
@@ -64,11 +84,11 @@ public class BookingTest {
 //        threads[3] = new Thread(new Task("test4", List.of(1L, 2L), bookingService));
 //        threads[4] = new Thread(new Task("test5", List.of(1L), bookingService));
 
-        threads[0] = new Thread(new Task("test1", List.of(1L, 2L), bookingService));
-        threads[1] = new Thread(new Task("test2", List.of(1L, 2L), bookingService));
-        threads[2] = new Thread(new Task("test3", List.of(1L, 2L), bookingService));
-        threads[3] = new Thread(new Task("test4", List.of(2L, 3L), bookingService));
-        threads[4] = new Thread(new Task("test5", List.of(2L, 3L), bookingService));
+//        threads[0] = new Thread(new Task("test1", List.of(1L, 2L), bookingService));
+//        threads[1] = new Thread(new Task("test2", List.of(1L, 2L), bookingService));
+//        threads[2] = new Thread(new Task("test3", List.of(1L, 2L), bookingService));
+//        threads[3] = new Thread(new Task("test4", List.of(2L, 3L), bookingService));
+//        threads[4] = new Thread(new Task("test5", List.of(2L, 3L), bookingService));
 
         // when
         for (Thread thread : threads) {
@@ -79,9 +99,9 @@ public class BookingTest {
         }
 
         // then
-        List<Booking> result = bookingService.findAll();
-//        assertThat(result).hasSize(1);
-        assertThat(result).hasSize(2);
+        List<Booking> result = bookingQueryService.findAll();
+        assertThat(result).hasSize(1);
+//        assertThat(result).hasSize(2);
     }
 
     @Test
@@ -91,7 +111,7 @@ public class BookingTest {
         // given
 
         // when
-        List<Booking> result = bookingService.findAll();
+        List<Booking> result = bookingQueryService.findAll();
 
         // then
         assertThat(result).hasSize(0);
@@ -106,10 +126,10 @@ public class BookingTest {
         long showId = 1;
 
         // when
-        seatService.updateToBooked(showId, seatIds);
+        seatCommandService.updateToBooked(showId, seatIds);
 
         // then
-        List<Seat> seats = seatService.findByIds(seatIds);
+        List<Seat> seats = seatQueryService.findByIds(seatIds);
         boolean result = seats.stream()
                 .allMatch(Seat::available);
         assertThat(result).isFalse();
@@ -118,17 +138,17 @@ public class BookingTest {
     static class Task implements Runnable {
         private final String loginId;
         private final List<Long> seatIds;
-        private final BookingService bookingService;
+        private final BookingCommandService bookingCommandService;
 
-        public Task(String loginId, List<Long> seatIds, BookingService bookingService) {
+        public Task(String loginId, List<Long> seatIds, BookingCommandService bookingCommandService) {
             this.loginId = loginId;
             this.seatIds = seatIds;
-            this.bookingService = bookingService;
+            this.bookingCommandService = bookingCommandService;
         }
 
         @Override
         public void run() {
-            bookingService.book(loginId, 1, seatIds);
+            bookingCommandService.book(loginId, 1, seatIds);
         }
     }
 
@@ -193,7 +213,7 @@ public class BookingTest {
 
         Runnable runnable = () -> {
             try {
-                memberService.increaseBookingCount(loginId, showId, seatCount, compareCount);
+                memberCommandService.increaseBookingCount(loginId, showId, seatCount, compareCount);
                 System.out.println(Thread.currentThread().getName() + ": OK");
             } catch (IllegalStateException e) {
                 System.out.println(Thread.currentThread().getName() + ": FAIL - " + e.getMessage());
