@@ -1,4 +1,4 @@
-package study.ticket.interfaces.request;
+package study.ticket.interfaces.dto.request;
 
 import lombok.Getter;
 import lombok.Setter;
