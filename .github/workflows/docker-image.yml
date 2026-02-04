@@ -13,6 +13,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'eclipse-temurin'
+
+    - name: Build Spring Boot
+      run: ./gradlew clean build
+
     - name: Build the Docker image
       run: docker build -t ticket:1.0.0 -f docker/Dockerfile .
