@@ -4,10 +4,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 import study.ticket.application.service.command.booking.BookingCommandService;
+import study.ticket.application.service.query.booking.BookingQuery;
 import study.ticket.application.service.query.booking.BookingQueryService;
 import study.ticket.domain.Booking;
-import study.ticket.interfaces.request.BookRequest;
-import study.ticket.interfaces.response.BookResponse;
+import study.ticket.interfaces.dto.request.BookRequest;
+import study.ticket.interfaces.dto.response.BookResponse;
 
 import java.util.Optional;
 
@@ -30,14 +31,14 @@ public class BookingCommandController {
         bookingCommandService.book(request.getLoginId(), request.getShowId(), request.getSeatIds());
 
         // 예매 정보 반환
-        Optional<Booking> booking = bookingQueryService.findById(request.getId());
+        Optional<BookingQuery> booking = bookingQueryService.findById(request.getId());
 //                .orElseThrow(() -> new IllegalArgumentException());
 
         return toBookResponse(booking);
     }
 
-    private BookResponse toBookResponse(Optional<Booking> findBooking) {
-        Booking booking = findBooking.orElse(null);
+    private BookResponse toBookResponse(Optional<BookingQuery> findBooking) {
+        BookingQuery booking = findBooking.orElse(null);
 
         if (booking == null) {
             return BookResponse.builder()
@@ -47,10 +48,11 @@ public class BookingCommandController {
 
         return BookResponse.builder()
                 .id(booking.getId())
-                .memberName(booking.getMember().getName())
-                .zone(booking.getSeat().getZone())
-                .row(booking.getSeat().getRow())
-                .number(booking.getSeat().getNumber())
+                .memberName(booking.getMemberName())
+                .showDate(booking.getShowDate())
+                .zone(booking.getZone())
+                .row(booking.getRow())
+                .number(booking.getNumber())
                 .build();
     }
 }
