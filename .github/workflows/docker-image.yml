@@ -23,7 +23,7 @@ jobs:
         distribution: 'temurin'
 
     - name: Build Spring Boot
-      run: ./gradlew clean build
+      run: chmod +x ./gradlew ./gradlew clean build
 
     - name: Build the Docker image
       run: docker build -t ticket:1.0.0 -f docker/Dockerfile .
