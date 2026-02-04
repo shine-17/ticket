@@ -1,6 +1,7 @@
 package study.ticket.book;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.redisson.api.*;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
 
+@Disabled("SpringBootTest 배포 제외")
 @SpringBootTest
 public class BookingTest {
 
