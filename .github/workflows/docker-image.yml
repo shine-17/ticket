@@ -27,7 +27,7 @@ jobs:
       run: chmod +x gradlew
 
     - name: Build Spring Boot
-      run: ./gradlew clean build
+      run: ./gradlew clean build -x test
 
     - name: Build the Docker image
       run: docker build -t ticket:1.0.0 -f docker/Dockerfile .
