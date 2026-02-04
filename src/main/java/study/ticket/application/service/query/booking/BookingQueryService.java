@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BookingQueryService {
-    Optional<Booking> findById(long id);
-    Optional<Booking> findByMemberId(String loginId);
+    Optional<BookingQuery> findById(long id);
+    Optional<BookingQuery> findByMemberId(String loginId);
 //    Optional<Booking> findByMemberIdAndShowId(String loginId);
-    List<Booking> findByIds(List<Long> ids);
-    List<Booking> findAll();
+    List<BookingQuery> findByIds(List<Long> ids);
+    List<BookingQuery> findAll();
 
     Logger log = LoggerFactory.getLogger(BookingQueryService.class);
 
