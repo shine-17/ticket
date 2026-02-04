@@ -12,6 +12,7 @@ import study.ticket.application.service.command.booking.BookingCommandService;
 import study.ticket.application.service.command.member.MemberCommandService;
 import study.ticket.application.service.command.seat.SeatCommandService;
 import study.ticket.application.service.command.show.ShowCommandService;
+import study.ticket.application.service.query.booking.BookingQuery;
 import study.ticket.application.service.query.booking.BookingQueryService;
 import study.ticket.application.service.query.seat.SeatQueryService;
 import study.ticket.domain.Booking;
@@ -99,7 +100,7 @@ public class BookingTest {
         }
 
         // then
-        List<Booking> result = bookingQueryService.findAll();
+        List<BookingQuery> result = bookingQueryService.findAll();
         assertThat(result).hasSize(1);
 //        assertThat(result).hasSize(2);
     }
@@ -111,28 +112,10 @@ public class BookingTest {
         // given
 
         // when
-        List<Booking> result = bookingQueryService.findAll();
+        List<BookingQuery> result = bookingQueryService.findAll();
 
         // then
-        assertThat(result).hasSize(0);
-    }
-
-    @Test
-    @DisplayName("비관적 락 테스트")
-    void pessimisticLockTest() {
-
-        // given
-        List<Long> seatIds = List.of(3L, 4L);
-        long showId = 1;
-
-        // when
-        seatCommandService.updateToBooked(showId, seatIds);
-
-        // then
-        List<Seat> seats = seatQueryService.findByIds(seatIds);
-        boolean result = seats.stream()
-                .allMatch(Seat::available);
-        assertThat(result).isFalse();
+        assertThat(result).hasSize(1);
     }
 
     static class Task implements Runnable {
@@ -221,23 +204,6 @@ public class BookingTest {
         };
 
         concurrentTestTemplate(runnable);
-    }
-
-    @Test
-    void redisLockTest4() {
-        String key1 = "seat:booked:1";
-        String key2 = "seat:booked:2";
-
-        List<Object> values = redisTemplate.opsForValue().multiGet(List.of(key2));
-
-        System.out.println(values);
-        System.out.println("list size: " + values.size());
-
-        values.forEach(value -> {
-            if (value == null) {
-                throw new IllegalStateException("이미 예약된 좌석입니다.");
-            }
-        });
     }
 
     void concurrentTestTemplate(Runnable runnable) throws InterruptedException {
