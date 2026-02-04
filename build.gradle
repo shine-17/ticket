@@ -67,3 +67,9 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+test {
+	filter {
+
+	}
+}
