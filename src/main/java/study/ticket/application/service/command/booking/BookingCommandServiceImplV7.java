@@ -7,7 +7,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import study.ticket.application.service.command.member.MemberCommandService;
 import study.ticket.application.service.command.seat.SeatCommandService;
-import study.ticket.application.service.command.show.ShowCommandService;
 import study.ticket.application.service.query.member.MemberQueryService;
 import study.ticket.application.service.query.seat.SeatQueryService;
 import study.ticket.application.service.query.show.ShowQueryService;
@@ -90,7 +89,7 @@ public class BookingCommandServiceImplV7 implements BookingCommandService {
     }
 
     private void assertValidateBookedSeat(long showId, List<Long> seatIds) {
-        List<String> keys = RedisKeys.BOOKED.generateKeys(showId, seatIds);
+        List<String> keys = RedisKeys.BOOKED_SEAT.generateKeys(showId, seatIds);
         List<Object> values = redisTemplate.opsForValue().multiGet(keys);
 
         assert values != null;
@@ -103,7 +102,7 @@ public class BookingCommandServiceImplV7 implements BookingCommandService {
     }
 
     private void assertValidatePreemptedSeat(String loginId, long showId, List<Long> seatIds) {
-        Map<String, String> keyMap = RedisKeys.PREEMPTED.generateKeyMap(loginId, showId, seatIds);
+        Map<String, String> keyMap = RedisKeys.PREEMPTED_SEAT.generateKeyMap(loginId, showId, seatIds);
 
         Boolean result = redisTemplate.opsForValue()
                 .multiSetIfAbsent(keyMap);
@@ -133,7 +132,7 @@ public class BookingCommandServiceImplV7 implements BookingCommandService {
 //    }
 
     private void cacheBookedSeat(String loginId, long showId, List<Long> seatIds) {
-        Map<String, String> keyMap = RedisKeys.BOOKED.generateKeyMap(loginId, showId, seatIds);
+        Map<String, String> keyMap = RedisKeys.BOOKED_SEAT.generateKeyMap(loginId, showId, seatIds);
 
         Boolean result = redisTemplate.opsForValue()
                 .multiSetIfAbsent(keyMap);
@@ -146,7 +145,7 @@ public class BookingCommandServiceImplV7 implements BookingCommandService {
         keyMap.keySet().forEach(bookedSeat -> redisTemplate.expire(bookedSeat, BOOKED_TTL, TimeUnit.SECONDS));
 
         // 선점 좌석 TTL (이 메서드가 원자적이지 않기 때문에 예약 좌석을 캐싱할 때 다른 트랜잭션이 통과해서 선점 시도하려고 할 수 있기 때문에 TTL 설정으로 방지
-        Map<String, String> preemptedKeyMap = RedisKeys.PREEMPTED.generateKeyMap(loginId, showId, seatIds);
+        Map<String, String> preemptedKeyMap = RedisKeys.PREEMPTED_SEAT.generateKeyMap(loginId, showId, seatIds);
         preemptedKeyMap.keySet().forEach(preemptedSeat -> redisTemplate.expire(preemptedSeat, 10, TimeUnit.SECONDS));
     }
 }

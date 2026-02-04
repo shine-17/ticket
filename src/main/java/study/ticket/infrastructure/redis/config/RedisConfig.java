@@ -38,9 +38,10 @@ public class RedisConfig {
         template.setKeySerializer(new StringRedisSerializer());
         template.setHashKeySerializer(new StringRedisSerializer());
 
-        // Value: Plain string (따옴표 없이 저장)
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        // Value: Json
+        Jackson2JsonRedisSerializer<RedisBookingDto> serializer = new Jackson2JsonRedisSerializer<>(RedisBookingDto.class);
+        template.setValueSerializer(serializer);
+        template.setHashValueSerializer(serializer);
 
         return template;
     }

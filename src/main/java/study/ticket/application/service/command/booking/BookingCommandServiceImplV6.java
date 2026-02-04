@@ -9,7 +9,6 @@ import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.transaction.annotation.Transactional;
 import study.ticket.application.service.command.member.MemberCommandService;
 import study.ticket.application.service.command.seat.SeatCommandService;
-import study.ticket.application.service.command.show.ShowCommandService;
 import study.ticket.application.service.query.member.MemberQueryService;
 import study.ticket.application.service.query.seat.SeatQueryService;
 import study.ticket.application.service.query.show.ShowQueryService;
@@ -121,8 +120,8 @@ public class BookingCommandServiceImplV6 implements BookingCommandService {
 
     private List<String> getKeys(long showId, List<Long> seatIds) {
         return Stream.concat(
-                RedisKeys.BOOKED.generateKeys(showId, seatIds).stream(),
-                RedisKeys.PREEMPTED.generateKeys(showId, seatIds).stream()
+                RedisKeys.BOOKED_SEAT.generateKeys(showId, seatIds).stream(),
+                RedisKeys.PREEMPTED_SEAT.generateKeys(showId, seatIds).stream()
         ).toList();
     }
 
