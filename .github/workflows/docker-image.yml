@@ -33,4 +33,4 @@ jobs:
       run: docker buildx build --load -t ticket:1.0.0 -f docker/Dockerfile .
 
     - name: Run Docker Container
-      run: docker run -d --name ticket_booking --env-file config.env --network ticket-network -p 8080:8080 ticket:1.0.0
+      run: docker run -d --name ticket_booking --env-file docker/config.env --network ticket-network -p 8080:8080 ticket:1.0.0
