@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: CI/CD for ticket application (docker based)
 
 on:
 #  push:
@@ -30,7 +30,7 @@ jobs:
       run: ./gradlew clean build -x test
 
     - name: Build the Docker image
-      run: docker buildx build --load -t ticket:1.0.0 -f docker/Dockerfile .
+      run: docker buildx build --load -t ticket -f docker/Dockerfile .
 
     - name: Run Docker Container
-      run: docker run -d --name ticket_booking --env-file docker/config.env --network ticket-network -p 8080:8080 ticket:1.0.0
+      run: docker run -d --name ticket_booking --env-file docker/config.env --network ticket-network -p 8080:8080 ticket
