@@ -1,4 +1,4 @@
-name: CI/CD for ticket application (docker based)
+name: CI/CD for ticket_booking (docker based)
 
 on:
 #  push:
