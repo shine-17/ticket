@@ -7,10 +7,14 @@ on:
 #    branches: [ "master" ]
   workflow_dispatch:
 
+env:
+  CONTAINER_NAME: ticket_booking
+  IMAGE_NAME: ticket_booking
+  NETWORK_NAME: ticket-network
+
+
 jobs:
-
   build:
-
     runs-on: self-hosted
 
     steps:
@@ -29,8 +33,20 @@ jobs:
     - name: Build Spring Boot
       run: ./gradlew clean build -x test
 
+    - name: Stop & remove container if exists
+      run: |
+        if [ "$(docker ps -aq -f name=$CONTAINER_NAME)" ]; then
+          docker rm -f $CONTAINER_NAME
+        fi
+
+    - name: Remove image if exists
+      run: |
+        if [ "$(docker images -q $IMAGE_NAME)" ]; then
+          docker rmi -f $IMAGE_NAME
+        fi
+
     - name: Build the Docker image
-      run: docker buildx build --load -t ticket -f docker/Dockerfile .
+      run: docker buildx build --load -t $IMAGE_NAME -f docker/Dockerfile .
 
     - name: Run Docker Container
-      run: docker run -d --name ticket_booking --env-file docker/config.env --network ticket-network -p 8080:8080 ticket
+      run: docker run -d --name $CONTAINER_NAME --env-file docker/config.env --network $NETWORK_NAME -p 8080:8080 $IMAGE_NAME
