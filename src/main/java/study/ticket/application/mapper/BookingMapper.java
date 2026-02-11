@@ -15,6 +15,7 @@ import study.ticket.infrastructure.redis.dto.RedisBookingDto;
 public interface BookingMapper {
 
     @Named("BookingToRedisBookingDto")
+    @Mapping(target = "id", source = "id")
     @Mapping(target = "memberName", source = "member.name")
     @Mapping(target = "showName", source = "show.name")
     @Mapping(target = "showDate", source = "show.date")
@@ -35,6 +36,7 @@ public interface BookingMapper {
 //    Booking toBooking(RedisBookingDto redisBookingDto);
 
     @Named("BookingToBookingQuery")
+    @Mapping(target = "id", source = "id")
     @Mapping(target = "memberName", source = "member.name")
     @Mapping(target = "showName", source = "show.name")
     @Mapping(target = "showDate", source = "show.date")
