@@ -11,7 +11,7 @@ import study.ticket.infrastructure.redis.seat.RedisKeys;
 
 import java.util.Optional;
 
-@Component
+//@Component
 @RequiredArgsConstructor
 public class BookingRedisAdapter implements BookingCachePort {
 
@@ -28,11 +28,12 @@ public class BookingRedisAdapter implements BookingCachePort {
     }
 
     @Override
-    public void save(BookingQuery booking) {
+    public BookingQuery save(BookingQuery booking) {
         RedisBookingDto bookingDto = mapper.toRedisBookingDto(booking);
 
         redisTemplate.opsForValue()
                 .set(RedisKeys.BOOKING.generateKey(booking.getId()), bookingDto);
 
+        return booking;
     }
 }
