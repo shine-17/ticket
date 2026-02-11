@@ -16,12 +16,10 @@ public class BookingQueryServiceImpl implements BookingQueryService {
 
     private final BookingQueryRepository bookingQueryRepository;
     private final BookingCachePort bookingCachePort;
-    private BookingMapper mapper;
 
     @Override
     public Optional<BookingQuery> findById(long id) {
         return Optional.ofNullable(bookingCachePort.find(id)
-//                .orElseGet(() -> bookingQueryRepository.findById(id).orElseThrow(() -> new IllegalStateException("예약이 존재하지 않습니다."))));
                 .orElseGet(() -> {
                     BookingQuery booking = bookingQueryRepository.findById(id).orElseThrow(() -> new IllegalStateException("예약이 존재하지 않습니다."));
                     bookingCachePort.save(booking);
